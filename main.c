@@ -50,6 +50,29 @@ void writeMessage(int fileDescriptor, char *message) {
     }
 }
 
+
+int readMessageFromClient(int fileDescriptor) {
+    char buffer[256];
+    int nOfBytes;
+
+    nOfBytes = read(fileDescriptor, buffer, 256);
+    if(nOfBytes < 0) {
+        perror("Could not read data from client\n");
+        exit(EXIT_FAILURE);
+    }
+    else
+    if(nOfBytes == 0)
+        /* End of file */
+        return(-1);
+    else
+        /* Data read */
+        printf(">Incoming message: %s\n",  buffer);
+    return(0);
+}
+
+
+
+
 int main(int argc, char *argv[]) {
     int sock;
     struct sockaddr_in serverName;
@@ -86,8 +109,13 @@ int main(int argc, char *argv[]) {
         printf("\n>");
         fgets(messageString, messageLength, stdin);
         messageString[messageLength - 1] = '\0';
-        if(strncmp(messageString,"quit\n",messageLength) != 0)
+        if(strncmp(messageString,"quit\n",messageLength) != 0) {
+
+
             writeMessage(sock, messageString);
+            readMessageFromClient(sock);
+
+        }
         else {
             close(sock);
             exit(EXIT_SUCCESS);
