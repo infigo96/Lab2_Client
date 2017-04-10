@@ -13,6 +13,7 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <netdb.h>
+#include <pthread.h>
 
 #define PORT 5555
 #define hostNameLength 50
@@ -36,6 +37,15 @@ void initSocketAddress(struct sockaddr_in *name, char *hostName, unsigned short 
     /* Fill in the host name into the sockaddr_in struct. */
     name->sin_addr = *(struct in_addr *)hostInfo->h_addr;
 }
+
+void *Read(int *param)
+{
+    while(1)
+    {
+        sleep(0.05);
+        readMessageFromClient(*param);
+    }
+}
 /* writeMessage
  * Writes the string message to the file (socket)
  * denoted by fileDescriptor.
@@ -50,11 +60,36 @@ void writeMessage(int fileDescriptor, char *message) {
     }
 }
 
+
+int readMessageFromClient(int fileDescriptor) {
+    char buffer[256];
+    int nOfBytes;
+
+    nOfBytes = read(fileDescriptor, buffer, 256);
+    if(nOfBytes < 0) {
+        perror("Could not read data from client\n");
+        exit(EXIT_FAILURE);
+    }
+    else
+    if(nOfBytes == 0)
+        /* End of file */
+        return(-1);
+    else
+        /* Data read */
+        printf(">Incoming message: %s\n>\n",  buffer);
+    return(0);
+}
+
+
+
+
 int main(int argc, char *argv[]) {
     int sock;
     struct sockaddr_in serverName;
     char hostName[hostNameLength];
     char messageString[messageLength];
+    int param;
+
 
     /* Check arguments */
     if(argv[1] == NULL) {
@@ -82,12 +117,18 @@ int main(int argc, char *argv[]) {
     printf("\nType something and press [RETURN] to send it to the server.\n");
     printf("Type 'quit' to nuke this program.\n");
     fflush(stdin);
+    pthread_t lasning;
+    if(pthread_create(&lasning, NULL, Read, &sock)) {
+        printf("Error creating thread\n");
+    }
     while(1) {
-        printf("\n>");
+        //printf("\n>");
         fgets(messageString, messageLength, stdin);
         messageString[messageLength - 1] = '\0';
         if(strncmp(messageString,"quit\n",messageLength) != 0)
+        {
             writeMessage(sock, messageString);
+        }
         else {
             close(sock);
             exit(EXIT_SUCCESS);
