@@ -42,7 +42,7 @@ void *Read(int *param)
 {
     while(1)
     {
-        sleep(0.05);
+        usleep(5000);
         readMessageFromClient(*param);
     }
 }
