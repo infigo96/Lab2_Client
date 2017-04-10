@@ -127,10 +127,7 @@ int main(int argc, char *argv[]) {
         messageString[messageLength - 1] = '\0';
         if(strncmp(messageString,"quit\n",messageLength) != 0)
         {
-
-
             writeMessage(sock, messageString);
-
         }
         else {
             close(sock);
