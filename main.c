@@ -38,12 +38,11 @@ void initSocketAddress(struct sockaddr_in *name, char *hostName, unsigned short 
     name->sin_addr = *(struct in_addr *)hostInfo->h_addr;
 }
 
-void *Read(int *param)
+void *Read(int *param)  //just reads incoming messages
 {
     while(1)
     {
-        usleep(5000);
-        readMessageFromClient(*param);
+        readMessageFromServer(*param);
     }
 }
 /* writeMessage
@@ -61,7 +60,7 @@ void writeMessage(int fileDescriptor, char *message) {
 }
 
 
-int readMessageFromClient(int fileDescriptor) {
+int readMessageFromServer(int fileDescriptor) {
     char buffer[256];
     int nOfBytes;
 
@@ -117,10 +116,12 @@ int main(int argc, char *argv[]) {
     printf("\nType something and press [RETURN] to send it to the server.\n");
     printf("Type 'quit' to nuke this program.\n");
     fflush(stdin);
-    pthread_t lasning;
-    if(pthread_create(&lasning, NULL, Read, &sock)) {
+
+    pthread_t thread;      //start a reading thread with pthread
+    if(pthread_create(&thread, NULL, Read, &sock)) {
         printf("Error creating thread\n");
     }
+
     while(1) {
         //printf("\n>");
         fgets(messageString, messageLength, stdin);
