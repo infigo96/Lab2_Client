@@ -13,10 +13,14 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <netdb.h>
+#include <pthread.h>
 
 #define PORT 5555
 #define hostNameLength 50
 #define messageLength  256
+
+void *Read(void* sock);
+int readMessageFromServer(int fileDescriptor);
 
 /* initSocketAddress
  * Initialises a sockaddr_in struct given a host name and a port.
@@ -49,12 +53,38 @@ void writeMessage(int fileDescriptor, char *message) {
         exit(EXIT_FAILURE);
     }
 }
+int readMessageFromServer(int fileDescriptor) {
 
+    char buffer[512];
+    int nOfBytes;
+
+    nOfBytes = read(fileDescriptor, buffer, 512);
+    if(nOfBytes < 0) {
+        perror("Could not read data from server\n");
+        exit(EXIT_FAILURE);
+    }
+    else
+    if(nOfBytes == 0)
+        /* End of file */
+        return(-1);
+    else
+        /* Data read */
+        printf(">Server message: %s\n",  buffer);
+    return(0);
+}
+void *Read(void* sock){
+
+    int intSock = *((int*)sock);
+    while(!0){
+        readMessageFromServer(intSock);
+    }
+}
 int main(int argc, char *argv[]) {
     int sock;
     struct sockaddr_in serverName;
     char hostName[hostNameLength];
     char messageString[messageLength];
+    pthread_t SockHandle;
 
     /* Check arguments */
     if(argv[1] == NULL) {
@@ -82,12 +112,18 @@ int main(int argc, char *argv[]) {
     printf("\nType something and press [RETURN] to send it to the server.\n");
     printf("Type 'quit' to nuke this program.\n");
     fflush(stdin);
+
+    if(pthread_create(&SockHandle, NULL, Read, (int*)&sock)){
+        printf("\nError creating thread\n");
+    }
+
     while(1) {
         printf("\n>");
         fgets(messageString, messageLength, stdin);
         messageString[messageLength - 1] = '\0';
-        if(strncmp(messageString,"quit\n",messageLength) != 0)
+        if(strncmp(messageString,"quit\n",messageLength) != 0) {
             writeMessage(sock, messageString);
+        }
         else {
             close(sock);
             exit(EXIT_SUCCESS);
