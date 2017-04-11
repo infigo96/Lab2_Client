@@ -42,6 +42,7 @@ void *Read(int *param)  //just reads incoming messages
 {
     while(1)
     {
+        usleep(500);
         readMessageFromServer(*param);
     }
 }
