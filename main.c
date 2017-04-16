@@ -60,7 +60,7 @@ void writeMessage(int fileDescriptor, char *message) {
     }
 }
 
-
+//Same function as found in Server but moved over to the client
 int readMessageFromServer(int fileDescriptor) {
     char buffer[256];
     int nOfBytes;
